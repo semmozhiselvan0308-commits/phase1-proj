@@ -1,0 +1,39 @@
+# Ignore raw datasets and large data files
+**/data/
+**/landing/
+**/reference/
+**/processed/
+**/rejected/
+**/analytics/
+**/curated/
+**/_temporary/
+**/spark_warehouse/
+**/sp*_output/
+**/output/
+**/*.csv
+**/*.CSV
+**/*.parquet
+**/*.orc
+**/*.avro
+**/*.gz
+**/*.zip
+
+# Ignore Spark-generated metadata and temp artifacts
+**/_SUCCESS
+**/*.crc
+**/*.tmp
+**/*.log
+
+# Keep the source code and project config tracked
+!**/*.py
+!**/*.ipynb
+!**/*.sql
+!**/*.md
+!**/*.yml
+!**/*.yaml
+!**/*.json
+!**/*.toml
+!**/*.ini
+!**/*.cfg
+!**/*.txt
+!**/.gitignore

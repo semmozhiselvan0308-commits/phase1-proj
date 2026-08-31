@@ -1,0 +1,13 @@
+### NP1 – Data Profiling Summary
+
+**To: Network Analytics Team**
+
+* The telecom activity file contains **1,891,928 records** and 8 columns for time, grid, country code, SMS, calls, and internet activity.
+
+* The data is from **1 November 2013**, covering **00:00 to 23:00**. There are exactly **24 timestamps**, and each timestamp is one hour apart, so the hourly cadence is correct.
+
+* There are some missing values in the SMS, call, and internet activity columns. However, there are **no missing grid IDs or timestamps**, no negative activity values, and no exact duplicate rows.
+
+* The dataset contains **10,000 unique grids and 246 country-code categories**. Each record represents activity for a particular **time, grid, and country code**.
+
+* I created **total SMS, total calls, and total activity** as derived measures. The busiest hour was **11 AM**, and the busiest grid was **Grid 5161**.
