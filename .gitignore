@@ -37,3 +37,10 @@
 !**/*.cfg
 !**/*.txt
 !**/.gitignore
+
+# Python cache and local databases
+__pycache__/
+**/__pycache__/
+*.pyc
+*.db
+**/*.db

@@ -1,0 +1,441 @@
+======================================================================
+DE8 — RELIABILITY & SAFE RERUN TESTING
+======================================
+
+Project:
+Telecom Network Activity Data Engineering Pipeline
+
+Purpose:
+DE8 validates that the DE7 end-to-end Airflow pipeline behaves safely
+when handling invalid input, reruns, warehouse loading, and failures.
+
+Date:
+September 2026
+
+======================================================================
+
+1. DE8 OBJECTIVE
+   ======================================================================
+
+DE8 was performed to verify pipeline reliability.
+
+The main objectives were:
+
+1. Verify that the complete DE7 pipeline can execute successfully.
+2. Verify that invalid/rejected input is handled safely.
+3. Verify that warehouse loading works correctly.
+4. Verify that rerunning the warehouse load does not create duplicates.
+5. Identify whether failures are caused by the pipeline or by test setup.
+
+======================================================================
+2. DE7 PIPELINE USED FOR TESTING
+================================
+
+DAG:
+de7_end_to_end_pipeline
+
+Task sequence:
+
+```
+ingest
+   |
+   v
+validate
+   |
+   v
+spark_process
+   |
+   v
+load_warehouse
+   |
+   v
+quality_check
+   |
+   v
+notify
+```
+
+The downstream tasks depend on the successful completion of the
+upstream tasks.
+
+======================================================================
+3. TEST 1 — VALID END-TO-END EXECUTION
+======================================
+
+A valid daily input was processed through the complete DE7 pipeline.
+
+Result:
+
+```
+ingest          SUCCESS
+validate        SUCCESS
+spark_process   SUCCESS
+load_warehouse  SUCCESS
+quality_check   SUCCESS
+notify          SUCCESS
+```
+
+Conclusion:
+
+PASS
+
+Meaning:
+
+The complete DE7 pipeline successfully executed from ingestion through
+notification.
+
+This proves that the main production-style pipeline works correctly.
+
+======================================================================
+4. TEST 2 — INVALID / REJECTED INPUT
+====================================
+
+Test file:
+
+```
+sms-call-internet-mi-2026-08-31.csv
+```
+
+The file was rejected during DE2 ingestion because it was missing the
+required column:
+
+```
+internet_activity
+```
+
+Therefore, the file was correctly placed in the rejected directory
+instead of the raw directory.
+
+When DE7 validation was executed for logical date:
+
+```
+2026-08-31
+```
+
+the validation task expected the daily file in the raw directory.
+
+The file was not present there because it had already been rejected.
+
+Validation output:
+
+```
+ERROR: Expected daily file not found:
+sms-call-internet-mi-2026-08-31.csv
+```
+
+Result:
+
+PASS — EXPECTED FAILURE
+
+Conclusion:
+
+This was not a pipeline bug.
+
+The pipeline correctly prevented invalid data from proceeding to
+Spark processing and warehouse loading.
+
+This demonstrates safe handling of rejected input.
+
+======================================================================
+5. TEST 3 — WAREHOUSE LOAD ENVIRONMENT FAILURE
+==============================================
+
+During the first DE8 warehouse test, the load_warehouse task failed.
+
+The original error was related to the Windows Spark/Hadoop environment.
+
+Important error:
+
+```
+java.lang.UnsatisfiedLinkError:
+org.apache.hadoop.io.nativeio.NativeIO$Windows.access0
+```
+
+The environment was missing the required Hadoop configuration when
+Spark was launched from the Airflow/WSL environment.
+
+Investigation confirmed:
+
+```
+Python:
+C:\Program Files\Python311\python.exe
+
+Hadoop:
+C:\hadoop
+
+Hadoop winutils:
+C:\hadoop\bin\winutils.exe
+
+Hadoop DLL:
+C:\hadoop\bin\hadoop.dll
+```
+
+A direct Windows Spark test was then performed.
+
+Spark successfully started and successfully read the analytics
+Parquet data.
+
+Conclusion:
+
+The warehouse failure was an environment/launch configuration issue,
+not a problem with the Parquet data or warehouse logic.
+
+======================================================================
+6. FIX APPLIED TO DE7
+=====================
+
+The DE7 warehouse launcher was configured to explicitly provide the
+Windows Python and Hadoop environment.
+
+Important configuration:
+
+```
+PYSPARK_PYTHON =
+C:\Program Files\Python311\python.exe
+
+PYSPARK_DRIVER_PYTHON =
+C:\Program Files\Python311\python.exe
+
+HADOOP_HOME =
+C:\hadoop
+
+PATH includes:
+C:\hadoop\bin
+```
+
+The DE7 warehouse task runs the patched DE6 warehouse builder using
+this environment.
+
+======================================================================
+7. TEST 4 — WAREHOUSE LOAD AFTER FIX
+====================================
+
+After applying the environment fix, the warehouse load was executed
+again.
+
+Result:
+
+```
+Warehouse load completed.
+```
+
+Airflow result:
+
+```
+Task instance state: SUCCESS
+```
+
+Conclusion:
+
+PASS
+
+The DE7 load_warehouse task successfully rebuilt the warehouse using
+the corrected Windows Spark/Hadoop environment.
+
+======================================================================
+8. TEST 5 — IDEMPOTENCY / SAFE RERUN TEST
+=========================================
+
+Purpose:
+
+To determine whether running the warehouse load again would create
+duplicate records.
+
+Warehouse row counts BEFORE rerun:
+
+```
+dim_time               = 5
+dim_grid               = 10000
+fact_network_activity  = 5
+```
+
+The load_warehouse task was executed again against the same analytics
+data.
+
+The task completed successfully:
+
+```
+Warehouse load completed.
+Task instance in success state.
+```
+
+Warehouse row counts AFTER rerun:
+
+```
+dim_time               = 5
+dim_grid               = 10000
+fact_network_activity  = 5
+```
+
+Comparison:
+
+```
+Table                    Before       After
+
+dim_time                    5            5
+dim_grid                10000        10000
+fact_network_activity       5            5
+```
+
+No row counts increased.
+
+Conclusion:
+
+PASS — IDEMPOTENT RERUN
+
+The warehouse load can be rerun without creating duplicate rows.
+
+The most important observation is:
+
+```
+fact_network_activity
+Before = 5
+After  = 5
+```
+
+If duplicate records had been inserted, this count would have
+increased.
+
+======================================================================
+9. TEST 6 — FUTURE LOGICAL DATE
+===============================
+
+A test was attempted using logical date:
+
+```
+2026-09-11
+```
+
+Airflow reported:
+
+```
+Logical date is in the future
+```
+
+The task did not proceed normally.
+
+Conclusion:
+
+TEST SETUP ISSUE — NOT A PIPELINE FAILURE
+
+The logical date was ahead of the Airflow execution date at the time
+of the test.
+
+This test should not be treated as a pipeline defect.
+
+No pipeline code was changed to bypass this condition.
+
+======================================================================
+10. FINAL DE8 RESULTS
+=====================
+
+Test / Component                         Result
+
+Valid end-to-end execution              PASS
+Ingestion                                PASS
+Validation                               PASS
+Spark processing                          PASS
+Warehouse loading                         PASS
+Quality check                             PASS
+Notification                              PASS
+Invalid input handling                    PASS
+Rejected file protection                 PASS
+Warehouse environment fix                PASS
+Warehouse rerun                          PASS
+Duplicate prevention                     PASS
+Future-date test                         TEST SETUP ISSUE
+
+======================================================================
+11. FINAL CONCLUSION
+====================
+
+DE8 reliability testing was successfully completed.
+
+The testing demonstrated that:
+
+1. Valid data can pass through the complete DE7 pipeline.
+2. Invalid input is rejected safely.
+3. Rejected files do not proceed to downstream processing.
+4. Spark can successfully process the valid analytics data.
+5. The warehouse can be loaded successfully.
+6. The Windows Spark/Hadoop environment issue was identified and
+   corrected.
+7. The warehouse load can be safely rerun.
+8. The warehouse row counts remain unchanged after rerun.
+9. No duplicate warehouse records were created.
+10. The pipeline correctly prevents processing when the expected
+    input file is unavailable.
+
+Final status:
+
+```
+                DE8 = COMPLETE / PASS
+```
+
+Key evidence:
+
+```
+dim_time:
+    Before = 5
+    After  = 5
+
+dim_grid:
+    Before = 10000
+    After  = 10000
+
+fact_network_activity:
+    Before = 5
+    After  = 5
+```
+
+This confirms successful safe-rerun/idempotency behavior for the
+warehouse loading stage.
+
+======================================================================
+12. WHAT I LEARNED FROM DE8
+===========================
+
+DE8 was not only a testing phase.
+
+It helped verify that a data pipeline should:
+
+```
+VALID DATA
+    |
+    v
+PROCESS SAFELY
+    |
+    v
+LOAD DATA
+    |
+    v
+ALLOW SAFE RERUN
+    |
+    v
+DO NOT CREATE DUPLICATES
+```
+
+It also demonstrated an important debugging principle:
+
+When a downstream Airflow task fails, first identify the FIRST
+actual failed task.
+
+In the original DE8 run:
+
+```
+load_warehouse = FIRST FAILURE
+```
+
+while:
+
+```
+quality_check = downstream failure
+notify         = downstream failure
+```
+
+Therefore, the root cause was investigated in load_warehouse rather
+than incorrectly debugging quality_check or notify.
+
+======================================================================
+END OF DE8 EXECUTION LOG
+========================

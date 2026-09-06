@@ -1,0 +1,56 @@
+{
+  "storage_strategy": {
+    "landing": {
+      "path": "data/landing",
+      "format": "CSV",
+      "write_mode": "append",
+      "partitioning": "none",
+      "retention": "short-term"
+    },
+    "raw": {
+      "path": "data/raw",
+      "format": "CSV",
+      "write_mode": "append-only",
+      "partitioning": "date organization optional",
+      "retention": "long-term",
+      "immutable": true
+    },
+    "rejected": {
+      "path": "data/rejected",
+      "format": "CSV",
+      "write_mode": "append",
+      "partitioning": "date-based when required",
+      "retention": "medium-term"
+    },
+    "reference": {
+      "path": "data/reference",
+      "format": "GeoJSON",
+      "write_mode": "controlled replacement",
+      "partitioning": "none",
+      "retention": "long-term",
+      "static": true
+    },
+    "processed": {
+      "path": "data/processed",
+      "format": "Parquet",
+      "write_mode": "append new dates / overwrite affected date on controlled rerun",
+      "partitioning": "date",
+      "partition_pattern": "date=YYYY-MM-DD",
+      "retention": "medium-to-long-term"
+    },
+    "analytics": {
+      "path": "data/analytics",
+      "format": "Parquet and warehouse tables",
+      "write_mode": "append/upsert or controlled overwrite",
+      "partitioning": "only where query benefit exists",
+      "retention": "business and reporting requirements"
+    },
+    "logs": {
+      "path": "logs",
+      "format": "text/JSON/application logs",
+      "write_mode": "append",
+      "partitioning": "execution date optional",
+      "retention": "short-to-medium-term"
+    }
+  }
+}
