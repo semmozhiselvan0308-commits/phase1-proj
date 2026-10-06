@@ -1,0 +1,34 @@
+ML2 IMPLEMENTATION LOG
+=======================
+
+Completed:
+- Fixed and documented the feature window convention before implementation.
+- Used a 24-hour recent window ending at t, inclusive.
+- Used the immediately preceding 24-hour baseline window.
+- Implemented avg_activity.
+- Implemented activity_growth with an explicit zero-baseline rule.
+- Implemented active_hours.
+- Implemented peak_ratio with an explicit zero-average rule.
+- Implemented population-standard-deviation variability.
+- Implemented internet_share with an explicit zero-total rule.
+- Persisted grid_id, feature_timestamp, and all six API-compatible feature names
+  in network_feature_table.
+- Added a leakage invariance test: appending future rows cannot change an old
+  feature row.
+- Added a deliberately leaky calculation test that demonstrably fails equality
+  when a t+1 row is included.
+- Added hand-check tests for avg_activity and peak_ratio.
+- Added zero-activity finite-value coverage.
+- Added required feature-table schema coverage.
+
+Files:
+- ml/features.py
+- ml2/feature_definitions.md
+- tests/test_features.py
+
+Run:
+- python -m pytest phase6/ml2/tests/test_features.py -q
+- python phase6/ml2/ml/features.py
+
+The build writes the accumulated warehouse's network_feature_table. ML3 must
+use chronological validation and preserve the same feature_timestamp boundary.

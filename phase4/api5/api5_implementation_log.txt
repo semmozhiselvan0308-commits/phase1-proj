@@ -1,0 +1,59 @@
+API5 IMPLEMENTATION LOG
+========================
+
+Feature:
+- Contract-first network risk prediction endpoint.
+
+Completed work:
+1. Created POST /network/predict-risk.
+2. Added the RiskPredictionRequest Pydantic model.
+3. Added required request fields based on the ML2 network features:
+   - grid_id
+   - feature_timestamp
+   - avg_activity
+   - activity_growth
+   - active_hours
+   - peak_ratio
+   - variability
+   - internet_share
+4. Added request validation:
+   - grid_id must be greater than 0.
+   - Activity metrics must be nonnegative where applicable.
+   - active_hours must be between 0 and 24.
+   - internet_share must be between 0 and 1.
+   - Unknown request fields are rejected.
+5. Added the RiskPredictionResponse contract with:
+   - risk_score
+   - risk_level
+   - model_version
+   - explanation_note
+6. Replaced the stub with the ML5 serving implementation:
+   - Loads phase6/ml3/outputs/risk_classifier.pkl at API startup.
+   - Fails clearly with FileNotFoundError when the trained artifact is missing.
+   - Uses the ML2 feature order and predict_proba() for the normalized risk score.
+   - Maps scores to LOW, MEDIUM, and HIGH operational levels.
+   - Derives a deterministic model_version from the trained artifact hash and evaluation report.
+   - Reads persisted ML4 anomaly evidence from network_anomaly_scores when available.
+7. Added a standalone FastAPI application and health endpoint.
+8. Added API5 requirements.txt.
+9. Added tests for:
+   - Successful stub prediction.
+   - Missing required fields returning HTTP 422.
+   - Out-of-range values returning HTTP 422.
+10. Added the contract documentation at:
+    docs/prediction_contract.md
+
+Validation result:
+- Existing request-validation tests remain applicable.
+- The former stub-value assertion must be updated for the real model contract; it cannot remain unchanged while also requiring a non-stub model_version.
+- Static error check: no errors found.
+
+ML5 handoff:
+- Replace only the stub prediction implementation.
+- Preserve the request validation and response field names.
+- Keep risk_score normalized between 0 and 1.
+- Keep the endpoint path unchanged so React clients do not need changes.
+
+Run locally:
+- Tests: python -m pytest phase4/api5/test_api5.py -q
+- Server: uvicorn phase4.api5.main:app

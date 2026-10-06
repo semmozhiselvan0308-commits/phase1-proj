@@ -1,0 +1,131 @@
+{
+  "anomaly_threshold_percent": 50.0,
+  "baseline": "median by grid_id and hour_of_day, excluding current row",
+  "bucket_counts": {
+    "minimum": 3,
+    "maximum": 6,
+    "distinct": 3
+  },
+  "score_counts": {
+    "rows": 1631448,
+    "flagged": 156775,
+    "high": 86338,
+    "low": 70437
+  },
+  "persisted_rows": 1631448,
+  "three_way_comparison": {
+    "compared_rows": 231453,
+    "all_three_agree": 122320,
+    "three_way_disagreements": 109133,
+    "anomaly_flagged": 17349,
+    "ml3_positive": 104719,
+    "np3_alerts": 0,
+    "examples": [
+      {
+        "grid_id": 1,
+        "target_timestamp": "2013-11-06 20:00:00",
+        "anomaly_flag": false,
+        "anomaly_direction": "HIGH",
+        "anomaly_score": 7.3777354321450686,
+        "ml3_prediction": true,
+        "np3_alert": false,
+        "all_three_agree": false
+      },
+      {
+        "grid_id": 2,
+        "target_timestamp": "2013-11-06 20:00:00",
+        "anomaly_flag": false,
+        "anomaly_direction": "HIGH",
+        "anomaly_score": 7.623352773797752,
+        "ml3_prediction": true,
+        "np3_alert": false,
+        "all_three_agree": false
+      },
+      {
+        "grid_id": 3,
+        "target_timestamp": "2013-11-06 20:00:00",
+        "anomaly_flag": false,
+        "anomaly_direction": "HIGH",
+        "anomaly_score": 7.882371961916715,
+        "ml3_prediction": true,
+        "np3_alert": false,
+        "all_three_agree": false
+      },
+      {
+        "grid_id": 4,
+        "target_timestamp": "2013-11-06 20:00:00",
+        "anomaly_flag": false,
+        "anomaly_direction": "HIGH",
+        "anomaly_score": 6.653129933127717,
+        "ml3_prediction": true,
+        "np3_alert": false,
+        "all_three_agree": false
+      },
+      {
+        "grid_id": 5,
+        "target_timestamp": "2013-11-06 20:00:00",
+        "anomaly_flag": false,
+        "anomaly_direction": "HIGH",
+        "anomaly_score": 7.3946611826076145,
+        "ml3_prediction": true,
+        "np3_alert": false,
+        "all_three_agree": false
+      },
+      {
+        "grid_id": 6,
+        "target_timestamp": "2013-11-06 20:00:00",
+        "anomaly_flag": false,
+        "anomaly_direction": "HIGH",
+        "anomaly_score": 7.882371961916715,
+        "ml3_prediction": true,
+        "np3_alert": false,
+        "all_three_agree": false
+      },
+      {
+        "grid_id": 7,
+        "target_timestamp": "2013-11-06 20:00:00",
+        "anomaly_flag": false,
+        "anomaly_direction": "HIGH",
+        "anomaly_score": 7.882371961916715,
+        "ml3_prediction": true,
+        "np3_alert": false,
+        "all_three_agree": false
+      },
+      {
+        "grid_id": 8,
+        "target_timestamp": "2013-11-06 20:00:00",
+        "anomaly_flag": false,
+        "anomaly_direction": "HIGH",
+        "anomaly_score": 7.882371961916715,
+        "ml3_prediction": true,
+        "np3_alert": false,
+        "all_three_agree": false
+      },
+      {
+        "grid_id": 9,
+        "target_timestamp": "2013-11-06 20:00:00",
+        "anomaly_flag": false,
+        "anomaly_direction": "HIGH",
+        "anomaly_score": 7.882371961916715,
+        "ml3_prediction": true,
+        "np3_alert": false,
+        "all_three_agree": false
+      },
+      {
+        "grid_id": 10,
+        "target_timestamp": "2013-11-06 20:00:00",
+        "anomaly_flag": false,
+        "anomaly_direction": "HIGH",
+        "anomaly_score": 15.336609087685538,
+        "ml3_prediction": true,
+        "np3_alert": false,
+        "all_three_agree": false
+      }
+    ],
+    "observations": [
+      "The anomaly scorer compares each hour with the same grid and hour-of-day historical median, so it can flag both high and low deviations.",
+      "ML3 predicts a future proxy label from trailing features, while the anomaly score describes the observed target hour; disagreement is expected because the mechanisms answer different questions.",
+      "NP3 uses its operational rule thresholds and contributed only the alerts present in the comparison timestamps; an absent alert is not evidence that the anomaly or classifier is wrong."
+    ]
+  }
+}

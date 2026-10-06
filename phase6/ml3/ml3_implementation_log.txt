@@ -1,0 +1,33 @@
+ML3 IMPLEMENTATION LOG
+=======================
+
+Completed:
+- Used the persisted ML2 network_feature_table.
+- Joined each feature row to the next hourly total_activity value for its grid.
+- Defined the positive proxy label from the future t+1 interval.
+- Fitted each grid's 90th-percentile target threshold on training rows only.
+- Used a chronological 80/20 split by unique feature_timestamp.
+- Never randomly mixed neighboring time observations across train and test.
+- Trained an interpretable StandardScaler + class-balanced LogisticRegression baseline.
+- Reported accuracy, precision, recall, and train/test class balance with base rate.
+- Recorded earliest and latest timestamps for train and test ranges.
+- Exported standardized feature coefficients for interpretation.
+- Compared test predictions with NP3 alerts by grid_id and target timestamp.
+- Reported how many NP3 alert rows overlap the test period, so no-overlap is not mistaken for agreement.
+- Wrote three observations, including the proxy-label limitation.
+- Persisted the trained model, JSON evaluation report, and test predictions.
+
+Artifacts:
+- outputs/risk_classifier.pkl
+- outputs/evaluation_report.json
+- outputs/test_predictions.csv
+- tests/test_training.py
+
+Run:
+- python -m pytest phase6/ml3/tests/test_training.py -q
+- python phase6/ml3/train_model.py
+
+Interpretation guardrails:
+- A positive result is an investigation priority, not a confirmed fault.
+- Accuracy must be read next to the positive-class base rate.
+- Very high accuracy requires leakage investigation before sign-off.

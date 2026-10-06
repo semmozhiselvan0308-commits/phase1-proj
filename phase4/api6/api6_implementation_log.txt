@@ -1,0 +1,30 @@
+API6 IMPLEMENTATION LOG
+========================
+
+Completed work:
+1. Created GET /pipeline/status.
+2. Connected the endpoint to the DE7 machine-readable pipeline status JSON.
+3. Exposed the DE7 run_id and run_timestamp.
+4. Exposed per-task statuses.
+5. Exposed rows_in, rows_rejected, nulls_handled, and rows_published.
+6. Exposed the DE7 AS_OF value used by API1.
+7. Added analytics_age_seconds and analytics_freshness indicators.
+8. Added a top-level healthy boolean.
+9. Added a populated reasons list when the pipeline is unhealthy.
+10. Added GET /network/grid/{grid_id}/location.
+11. Read grid_id and geometry_reference from dim_grid.
+12. Resolved the referenced GeoJSON cell and returned centroid latitude and longitude.
+13. Returned polygon_reference without returning full Polygon geometry.
+14. Added HTTP 404 handling for unknown grids and HTTP 503 handling for unavailable or invalid source records.
+15. Added tests for successful status, deliberately failed pipeline status, missing status records, and grid 4821 location.
+16. Documented both endpoints as sanctioned evidence sources for the Claude phase.
+
+Health definition:
+- healthy is true only when DE7 pipeline_result is success, every recorded task is success, and AS_OF is present.
+- Freshness is reported separately so historical analytics can be identified as stale without confusing staleness with a failed pipeline run.
+
+Validation:
+- Run: python -m pytest phase4/api6/test_api6.py -q
+
+Run locally:
+- Server: uvicorn phase4.api6.main:app

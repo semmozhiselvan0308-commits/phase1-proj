@@ -15,17 +15,16 @@ import json
 # DE6 - Warehouse Modelling for Network Analytics
 # ============================================================
 
-# Project paths
-BASE_DIR = r"C:\Users\Admin\phase1-proj\phase3\de6"
+BASE_DIR = r"C:\Users\semmozhiselvan.a\Documents\phase1 proj\phase3\de6"
 
 SOURCE_PATH = (
-    r"C:\Users\Admin\phase1-proj\phase3\de5"
-    r"\data\analytics\grid_summary"
+    r"C:\Users\semmozhiselvan.a\Documents\phase1 proj"
+    r"\phase2\data\analytics\hourly_grid_summary"
 )
 
 REFERENCE_PATH = (
-    r"C:\Users\Admin\phase1-proj\phase3\de5"
-    r"\data\reference\milano-grid.geojson"
+    r"C:\Users\semmozhiselvan.a\Documents\phase1 proj"
+    r"\phase2\data\reference\milano-grid.geojson"
 )
 
 WAREHOUSE_DIR = os.path.join(

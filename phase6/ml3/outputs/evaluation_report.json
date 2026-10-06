@@ -1,0 +1,137 @@
+{
+  "algorithm": "StandardScaler + class-balanced LogisticRegression",
+  "feature_names": [
+    "avg_activity",
+    "activity_growth",
+    "active_hours",
+    "peak_ratio",
+    "variability",
+    "internet_share"
+  ],
+  "label": "future total_activity > grid-specific training-period 90th percentile",
+  "split": {
+    "strategy": "chronological 80/20 split by unique feature_timestamp",
+    "train_earliest": "2013-11-02 23:00:00",
+    "train_latest": "2013-11-06 18:00:00",
+    "test_earliest": "2013-11-06 19:00:00",
+    "test_latest": "2013-11-07 18:00:00"
+  },
+  "metrics": {
+    "accuracy": 0.5406454010101402,
+    "precision": 0.12346374583408933,
+    "recall": 0.4708645931968825
+  },
+  "class_balance": {
+    "train": {
+      "rows": 919995,
+      "positive_rows": 99999,
+      "negative_rows": 819996,
+      "base_rate": 0.10869515595193452
+    },
+    "test": {
+      "rows": 231453,
+      "positive_rows": 27458,
+      "negative_rows": 203995,
+      "base_rate": 0.11863315662359096
+    }
+  },
+  "coefficients_on_standardized_features": {
+    "avg_activity": 0.1556229196198644,
+    "activity_growth": 0.06916892373838993,
+    "active_hours": 0.01492587900241313,
+    "peak_ratio": 0.13654746840899326,
+    "variability": -0.10284458743464758,
+    "internet_share": -0.14570115368267766
+  },
+  "training_thresholds": {
+    "method": "grid-specific 90th percentile fitted on train rows only",
+    "grid_count": 10000
+  },
+  "np3_comparison": {
+    "compared_rows": 231453,
+    "np3_alert_rows_in_test": 0,
+    "agreements": 126734,
+    "disagreements": 104719,
+    "model_positive_np3_absent": 104719,
+    "model_negative_np3_present": 0,
+    "examples": [
+      {
+        "grid_id": 1,
+        "target_timestamp": "2013-11-06 20:00:00",
+        "model_positive": true,
+        "np3_alert_present": false,
+        "agreement": false
+      },
+      {
+        "grid_id": 2,
+        "target_timestamp": "2013-11-06 20:00:00",
+        "model_positive": true,
+        "np3_alert_present": false,
+        "agreement": false
+      },
+      {
+        "grid_id": 3,
+        "target_timestamp": "2013-11-06 20:00:00",
+        "model_positive": true,
+        "np3_alert_present": false,
+        "agreement": false
+      },
+      {
+        "grid_id": 4,
+        "target_timestamp": "2013-11-06 20:00:00",
+        "model_positive": true,
+        "np3_alert_present": false,
+        "agreement": false
+      },
+      {
+        "grid_id": 5,
+        "target_timestamp": "2013-11-06 20:00:00",
+        "model_positive": true,
+        "np3_alert_present": false,
+        "agreement": false
+      },
+      {
+        "grid_id": 6,
+        "target_timestamp": "2013-11-06 20:00:00",
+        "model_positive": true,
+        "np3_alert_present": false,
+        "agreement": false
+      },
+      {
+        "grid_id": 7,
+        "target_timestamp": "2013-11-06 20:00:00",
+        "model_positive": true,
+        "np3_alert_present": false,
+        "agreement": false
+      },
+      {
+        "grid_id": 8,
+        "target_timestamp": "2013-11-06 20:00:00",
+        "model_positive": true,
+        "np3_alert_present": false,
+        "agreement": false
+      },
+      {
+        "grid_id": 9,
+        "target_timestamp": "2013-11-06 20:00:00",
+        "model_positive": true,
+        "np3_alert_present": false,
+        "agreement": false
+      },
+      {
+        "grid_id": 10,
+        "target_timestamp": "2013-11-06 20:00:00",
+        "model_positive": true,
+        "np3_alert_present": false,
+        "agreement": false
+      }
+    ]
+  },
+  "observations": [
+    "The chronological split tests future timestamps rather than randomly mixing neighboring hours.",
+    "The standardized coefficients expose which trailing-window signals move the investigation-risk estimate up or down, but they do not establish causation.",
+    "The class-balanced baseline produced 104719 positive test predictions against a test base rate of 0.119; precision and recall must be read with that imbalance in mind.",
+    "NP3 contributed 0 alert rows in the test period, so any comparison limitation is reported rather than treated as model agreement.",
+    "The proxy label and NP3 rules answer different questions, so disagreements require an operator to inspect the grid rather than treating either output as a confirmed fault."
+  ]
+}

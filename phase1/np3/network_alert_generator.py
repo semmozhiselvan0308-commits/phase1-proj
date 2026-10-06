@@ -194,7 +194,47 @@ def prepare_data(df):
 
 
 # =========================================================
-# 3. CALCULATE WITHIN-DAY BASELINE
+# 3. CALCULATE SHARED BUCKET BASELINE
+# =========================================================
+
+def calculate_bucket_baseline(
+    df,
+    bucket_key,
+    reducer="median",
+    exclude_current=True,
+):
+    """Calculate one baseline path for arbitrary grid/time buckets."""
+
+    if reducer not in {"mean", "median"}:
+        raise ValueError("reducer must be 'mean' or 'median'")
+
+    result = df.copy()
+    if callable(bucket_key):
+        result["_baseline_bucket"] = result.apply(bucket_key, axis=1)
+    else:
+        result["_baseline_bucket"] = result[bucket_key]
+
+    baseline_by_index = {}
+    for _, group in result.groupby(
+        ["grid_id", "_baseline_bucket"],
+        sort=False,
+    ):
+        for index in group.index:
+            values = group["total_activity"]
+            if exclude_current:
+                values = values.drop(index)
+            if values.empty:
+                baseline_by_index[index] = float("nan")
+            elif reducer == "mean":
+                baseline_by_index[index] = float(values.mean())
+            else:
+                baseline_by_index[index] = float(values.median())
+
+    result["baseline_activity"] = pd.Series(baseline_by_index)
+    return result.drop(columns=["_baseline_bucket"])
+
+
+# 4. CALCULATE WITHIN-DAY BASELINE
 # =========================================================
 
 def calculate_within_day_baseline(df):
@@ -203,62 +243,12 @@ def calculate_within_day_baseline(df):
         "Calculating within-day baselines..."
     )
 
-    df = df.copy()
-
-    baseline_values = []
-
-    # -----------------------------------------------------
-    # IMPORTANT:
-    #
-    # For every grid/hour, the current hour is excluded.
-    #
-    # Example:
-    #
-    # Grid 1, 05:00
-    #
-    # Current value = 05:00 activity
-    #
-    # Baseline = median of the OTHER 23 hourly values.
-    # -----------------------------------------------------
-
-    for grid_id, group in df.groupby(
-        "grid_id",
-        sort=False
-    ):
-
-        group = group.sort_values(
-            "timestamp"
-        )
-
-        values = group[
-            "total_activity"
-        ].tolist()
-
-        for i in range(len(values)):
-
-            # Exclude the current hour
-            other_values = (
-                values[:i] +
-                values[i + 1:]
-            )
-
-            if len(other_values) == 0:
-
-                baseline_values.append(
-                    float("nan")
-                )
-
-            else:
-
-                baseline_values.append(
-                    float(
-                        pd.Series(
-                            other_values
-                        ).median()
-                    )
-                )
-
-    df["baseline_activity"] = baseline_values
+    df = calculate_bucket_baseline(
+        df,
+        bucket_key=lambda row: 0,
+        reducer="median",
+        exclude_current=True,
+    )
 
     logger.info(
         "Within-day baseline calculation completed."

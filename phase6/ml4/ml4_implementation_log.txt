@@ -1,0 +1,41 @@
+ML4 IMPLEMENTATION LOG
+=======================
+
+Completed:
+- Generalized NP3's baseline logic into calculate_bucket_baseline.
+- Updated NP3's calculate_within_day_baseline to use the shared function.
+- Added an hour-of-day historical median baseline for each grid.
+- Excluded the current row from its comparable-hour baseline.
+- Recorded baseline_bucket_count to prove multiple days of history are used.
+- Calculated signed percentage deviation from the baseline.
+- Used a 50% absolute-deviation threshold for anomaly_flag.
+- Recorded HIGH and LOW direction separately.
+- Stored current value, baseline value, anomaly score, flag, direction, bucket count, and human-readable reason.
+- Persisted results to network_anomaly_scores.
+- Compared anomaly flags with ML3 predictions and NP3 alerts by grid_id and timestamp.
+- Wrote a three-way comparison artifact and report with disagreement examples.
+- Added tests for shared baseline reuse, multiple-day buckets, and both anomaly directions.
+
+Artifacts:
+- phase6/ml4/anomaly.py
+- phase6/ml4/outputs/network_anomaly_scores (SQLite table)
+- phase6/ml4/outputs/anomaly_report.json
+- phase6/ml4/outputs/three_way_comparison.csv
+- phase6/ml4/tests/test_anomaly.py
+
+Interpretation:
+- HIGH means observed activity is materially above comparable historical hours.
+- LOW means observed activity is materially below comparable historical hours.
+- The anomaly score describes observed deviation; ML3 predicts a future proxy label; NP3 applies operational rules.
+- Disagreement between the three mechanisms is evidence to investigate, not a software defect.
+
+Verified real-data run:
+- Persisted 1,631,448 rows to network_anomaly_scores.
+- Hour-of-day baseline bucket counts ranged from 3 to 6 historical observations,
+	confirming that the baseline uses multiple days.
+- Flagged 86,338 HIGH anomalies and 70,437 LOW anomalies.
+- Compared 231,453 ML3 test rows across the three mechanisms.
+- Found 109,133 three-way disagreements, which are retained for review rather
+	than collapsed into a single decision.
+- Final report: outputs/anomaly_report.json
+- Final comparison: outputs/three_way_comparison.csv

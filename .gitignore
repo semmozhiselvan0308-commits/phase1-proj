@@ -44,3 +44,17 @@ __pycache__/
 *.pyc
 *.db
 **/*.db
+
+# Local Python virtual environment
+.venv/
+venv/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Node dependencies
+node_modules/
+**/node_modules/
+

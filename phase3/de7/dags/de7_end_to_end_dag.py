@@ -1,11 +1,10 @@
-
-from datetime import datetime,timedelta
+﻿from datetime import datetime, timedelta
 from pathlib import Path
 import csv
 import json
+import os
 import re
 import sqlite3
-import os
 import subprocess
 
 from airflow import DAG
@@ -18,8 +17,16 @@ from airflow.utils.trigger_rule import TriggerRule
 # DE7 PATHS
 # =========================================================
 
-PROJECT_WIN = Path(r"C:\Users\Admin\phase1-proj\phase3")
-PROJECT_WSL = Path("/mnt/c/Users/Admin/phase1-proj/phase3")
+PROJECT_ROOT_WIN = Path(
+    r"C:\Users\semmozhiselvan.a\Documents\phase1 proj"
+)
+
+PROJECT_ROOT_WSL = Path(
+    "/mnt/c/Users/semmozhiselvan.a/Documents/phase1 proj"
+)
+
+PROJECT_WIN = PROJECT_ROOT_WIN / "phase3"
+PROJECT_WSL = PROJECT_ROOT_WSL / "phase3"
 
 DE2_WIN = PROJECT_WIN / "de2"
 DE2_WSL = PROJECT_WSL / "de2"
@@ -29,6 +36,8 @@ DE6_WSL = PROJECT_WSL / "de6"
 
 DE7_WIN = PROJECT_WIN / "de7"
 DE7_WSL = PROJECT_WSL / "de7"
+
+PHASE6_WIN = PROJECT_ROOT_WIN / "phase6"
 
 PYTHON_EXE_WIN = r"C:\Program Files\Python311\python.exe"
 
@@ -49,6 +58,18 @@ WAREHOUSE_SCRIPT_WIN = str(
     DE6_WIN / "scripts" / "build_warehouse.py"
 )
 
+ML2_SCRIPT_WIN = str(
+    PHASE6_WIN / "ml2" / "ml" / "features.py"
+)
+
+ML4_SCRIPT_WIN = str(
+    PHASE6_WIN / "ml4" / "anomaly.py"
+)
+
+ML6_SCRIPT_WIN = str(
+    PHASE6_WIN / "ml6" / "batch_score.py"
+)
+
 TEMP_SCRIPT_WIN = str(
     DE7_WIN / "de7_de6_runner_temp.py"
 )
@@ -58,7 +79,9 @@ TEMP_SCRIPT_WIN = str(
 # WSL PATHS
 # =========================================================
 
-RAW_DIR_WSL = DE2_WSL / "data" / "raw"
+RAW_DIR_WSL = (
+    DE2_WSL / "data" / "raw"
+)
 
 REJECTED_DIR_WSL = (
     DE2_WSL / "data" / "rejected"
@@ -119,7 +142,6 @@ TEMP_SCRIPT_WSL = (
 # =========================================================
 
 def run_windows_python(script_path_win):
-
     command = [
         "powershell.exe",
         "-NoProfile",
@@ -165,7 +187,6 @@ def run_windows_python(script_path_win):
 # =========================================================
 
 def ingest_task():
-
     print("=" * 70)
     print("DE7 TASK: INGEST")
     print("=" * 70)
@@ -188,7 +209,6 @@ def ingest_task():
 # =========================================================
 
 def validate_task(**context):
-
     print("=" * 70)
     print("DE7 TASK: VALIDATE")
     print("=" * 70)
@@ -199,15 +219,10 @@ def validate_task(**context):
             f"{AUDIT_FILE_WSL}"
         )
 
-    # -----------------------------------------------------
-    # Control 1: Determine expected daily file
-    # from the Airflow logical date
-    # -----------------------------------------------------
-
     dag_run = context["dag_run"]
 
-    expected_date = dag_run.logical_date.strftime(
-        "%Y-%m-%d"
+    expected_date = (
+        dag_run.logical_date.strftime("%Y-%m-%d")
     )
 
     expected_filename = (
@@ -223,12 +238,7 @@ def validate_task(**context):
         f"{expected_filename}"
     )
 
-    # -----------------------------------------------------
-    # Check expected file specifically
-    # -----------------------------------------------------
-
     if not expected_raw_file.exists():
-
         print(
             f"ERROR: Expected daily file not found: "
             f"{expected_raw_file}"
@@ -238,10 +248,6 @@ def validate_task(**context):
             "Validation failed: expected daily "
             f"file is missing: {expected_filename}"
         )
-
-    # -----------------------------------------------------
-    # Existing visibility checks
-    # -----------------------------------------------------
 
     raw_files = list(
         RAW_DIR_WSL.glob(
@@ -275,15 +281,11 @@ def validate_task(**context):
     print("Validation passed.")
 
 
-
-
 # =========================================================
 # TASK 3 — SPARK PROCESS
-# Reuse DE3/Spark pipeline
 # =========================================================
 
 def spark_process_task():
-
     print("=" * 70)
     print("DE7 TASK: SPARK_PROCESS")
     print("=" * 70)
@@ -311,11 +313,9 @@ def spark_process_task():
 
 # =========================================================
 # TASK 4 — LOAD WAREHOUSE
-# Reuse DE6 warehouse builder
 # =========================================================
 
 def load_warehouse_task():
-
     print("=" * 70)
     print("DE7 TASK: LOAD_WAREHOUSE")
     print("=" * 70)
@@ -344,14 +344,11 @@ def load_warehouse_task():
 
     patched = original
 
-    # Force Spark Python workers to use
-    # the installed Windows Python.
     spark_python_config = f'''
 import os
 
 os.environ["PYSPARK_PYTHON"] = r"{PYTHON_EXE_WIN}"
 os.environ["PYSPARK_DRIVER_PYTHON"] = r"{PYTHON_EXE_WIN}"
-
 os.environ["HADOOP_HOME"] = r"C:\\hadoop"
 os.environ["PATH"] = (
     r"C:\\hadoop\\bin;"
@@ -365,10 +362,8 @@ os.environ["PATH"] = (
         + patched
     )
 
-    # Redirect DE6 SOURCE_PATH to DE2
-    # analytics output.
     patched, source_count = re.subn(
-        r'SOURCE_PATH\s*=\s*\(\s*r"[^"]+"\s*r"[^"]+"\s*\)',
+        r'SOURCE_PATH\s*=\s*\(?\s*r"[^"]+"\s*r"[^"]+"\s*\)?',
         lambda _: (
             f'SOURCE_PATH = r"{ANALYTICS_DIR_WIN}"'
         ),
@@ -376,12 +371,10 @@ os.environ["PATH"] = (
         count=1,
     )
 
-    # Redirect DE6 REFERENCE_PATH to
-    # DE2 GeoJSON.
     patched, reference_count = re.subn(
-        r'REFERENCE_PATH\s*=\s*\(\s*r"[^"]+"\s*r"[^"]+"\s*\)',
+        r'REFERENCE_PATH\s*=\s*\(?\s*r"[^"]+"\s*r"[^"]+"\s*\)?',
         lambda _: (
-            'REFERENCE_PATH = '
+            "REFERENCE_PATH = "
             f'r"{str(DE2_WIN / "data" / "reference" / "milano-grid.geojson")}"'
         ),
         patched,
@@ -399,7 +392,6 @@ os.environ["PATH"] = (
         )
 
     try:
-
         TEMP_SCRIPT_WSL.write_text(
             patched,
             encoding="utf-8"
@@ -415,7 +407,6 @@ os.environ["PATH"] = (
         )
 
     finally:
-
         if TEMP_SCRIPT_WSL.exists():
             TEMP_SCRIPT_WSL.unlink()
 
@@ -431,11 +422,239 @@ os.environ["PATH"] = (
 
 
 # =========================================================
-# TASK 5 — QUALITY CHECK
+# TASK 5 — ML2 FEATURE GENERATION
+# =========================================================
+
+def ml2_build_features_task():
+    print("=" * 70)
+    print("DE7 TASK: ML2_BUILD_FEATURES")
+    print("=" * 70)
+
+    if not WAREHOUSE_DB_WSL.exists():
+        raise FileNotFoundError(
+            f"Warehouse database missing: "
+            f"{WAREHOUSE_DB_WSL}"
+        )
+
+    print(
+        "DE7: Building ML2 network feature table"
+    )
+
+    run_windows_python(
+        ML2_SCRIPT_WIN
+    )
+
+    with sqlite3.connect(
+        str(WAREHOUSE_DB_WSL)
+    ) as connection:
+
+        table_exists = connection.execute(
+            """
+            SELECT 1
+            FROM sqlite_master
+            WHERE type = 'table'
+              AND name = 'network_feature_table'
+            """
+        ).fetchone()
+
+        if table_exists is None:
+            raise RuntimeError(
+                "ML2 completed but "
+                "network_feature_table was not created."
+            )
+
+        row_count = connection.execute(
+            """
+            SELECT COUNT(*)
+            FROM network_feature_table
+            """
+        ).fetchone()[0]
+
+    if row_count <= 0:
+        raise RuntimeError(
+            "ML2 feature table contains zero rows."
+        )
+
+    print(
+        f"ML2 feature table ready: "
+        f"{row_count} rows"
+    )
+
+
+# =========================================================
+# TASK 6 — ML4 ANOMALY SCORING
+# =========================================================
+
+def ml4_anomaly_scoring_task():
+    print("=" * 70)
+    print("DE7 TASK: ML4_ANOMALY_SCORING")
+    print("=" * 70)
+
+    if not WAREHOUSE_DB_WSL.exists():
+        raise FileNotFoundError(
+            f"Warehouse database missing: "
+            f"{WAREHOUSE_DB_WSL}"
+        )
+
+    print(
+        "DE7: Running ML4 anomaly scorer"
+    )
+
+    run_windows_python(
+        ML4_SCRIPT_WIN
+    )
+
+    with sqlite3.connect(
+        str(WAREHOUSE_DB_WSL)
+    ) as connection:
+
+        table_exists = connection.execute(
+            """
+            SELECT 1
+            FROM sqlite_master
+            WHERE type = 'table'
+              AND name = 'network_anomaly_scores'
+            """
+        ).fetchone()
+
+        if table_exists is None:
+            raise RuntimeError(
+                "ML4 completed but "
+                "network_anomaly_scores was not created."
+            )
+
+        row_count = connection.execute(
+            """
+            SELECT COUNT(*)
+            FROM network_anomaly_scores
+            """
+        ).fetchone()[0]
+
+    if row_count <= 0:
+        raise RuntimeError(
+            "ML4 anomaly score table contains zero rows."
+        )
+
+    print(
+        f"ML4 anomaly scores ready: "
+        f"{row_count} rows"
+    )
+
+
+# =========================================================
+# TASK 7 — ML6 BATCH RISK SCORING
+# =========================================================
+
+def ml6_batch_scoring_task():
+    print("=" * 70)
+    print("DE7 TASK: ML6_BATCH_SCORING")
+    print("=" * 70)
+
+    if not WAREHOUSE_DB_WSL.exists():
+        raise FileNotFoundError(
+            f"Warehouse database missing: "
+            f"{WAREHOUSE_DB_WSL}"
+        )
+
+    model_path = (
+        PHASE6_WIN
+        / "ml3"
+        / "outputs"
+        / "risk_classifier.pkl"
+    )
+
+    if not model_path.exists():
+        raise FileNotFoundError(
+            f"ML3 trained model missing: "
+            f"{model_path}"
+        )
+
+    print(
+        "DE7: Running ML6 batch risk scorer"
+    )
+
+    run_windows_python(
+        ML6_SCRIPT_WIN
+    )
+
+    with sqlite3.connect(
+        str(WAREHOUSE_DB_WSL)
+    ) as connection:
+
+        table_exists = connection.execute(
+            """
+            SELECT 1
+            FROM sqlite_master
+            WHERE type = 'table'
+              AND name = 'network_risk_scores'
+            """
+        ).fetchone()
+
+        if table_exists is None:
+            raise RuntimeError(
+                "ML6 completed but "
+                "network_risk_scores was not created."
+            )
+
+        row_count = connection.execute(
+            """
+            SELECT COUNT(*)
+            FROM network_risk_scores
+            """
+        ).fetchone()[0]
+
+        unique_keys = connection.execute(
+            """
+            SELECT COUNT(*)
+            FROM (
+                SELECT DISTINCT grid_id, feature_timestamp
+                FROM network_risk_scores
+            )
+            """
+        ).fetchone()[0]
+
+        model_versions = connection.execute(
+            """
+            SELECT COUNT(DISTINCT model_version)
+            FROM network_risk_scores
+            """
+        ).fetchone()[0]
+
+    if row_count <= 0:
+        raise RuntimeError(
+            "ML6 risk score table contains zero rows."
+        )
+
+    if row_count != unique_keys:
+        raise RuntimeError(
+            "ML6 risk score table contains duplicate "
+            "(grid_id, feature_timestamp) keys."
+        )
+
+    if model_versions != 1:
+        raise RuntimeError(
+            "ML6 risk score table contains multiple "
+            "model versions."
+        )
+
+    print(
+        f"ML6 risk scores ready: {row_count} rows"
+    )
+
+    print(
+        f"ML6 unique keys: {unique_keys}"
+    )
+
+    print(
+        f"ML6 model versions: {model_versions}"
+    )
+
+
+# =========================================================
+# TASK 8 — QUALITY CHECK
 # =========================================================
 
 def quality_check_task(**context):
-
     print("=" * 70)
     print("DE7 TASK: QUALITY_CHECK")
     print("=" * 70)
@@ -447,21 +666,19 @@ def quality_check_task(**context):
 
     dag_run = context["dag_run"]
 
-    # -----------------------------------------------------
-    # Determine upstream states
-    # -----------------------------------------------------
-
     upstream_ids = [
         "ingest",
         "validate",
         "spark_process",
         "load_warehouse",
+        "ml2_build_features",
+        "ml4_anomaly_scoring",
+        "ml6_batch_scoring",
     ]
 
     task_states = {}
 
     for task_id in upstream_ids:
-
         ti = TaskInstance.get_task_instance(
             dag_id=dag_run.dag_id,
             task_id=task_id,
@@ -480,22 +697,16 @@ def quality_check_task(**context):
         for task_id in upstream_ids
     )
 
-    # -----------------------------------------------------
-    # Metrics
-    # -----------------------------------------------------
-
     rows_in = 0
     rows_rejected = 0
     nulls_handled = 0
     rows_published = 0
+    feature_rows = 0
+    anomaly_rows = 0
+    risk_rows = 0
     as_of = None
 
-    # -----------------------------------------------------
-    # Read dashboard
-    # -----------------------------------------------------
-
     if DASHBOARD_FILE_WSL.exists():
-
         with open(
             DASHBOARD_FILE_WSL,
             "r",
@@ -534,10 +745,6 @@ def quality_check_task(**context):
             "end_timestamp"
         )
 
-    # -----------------------------------------------------
-    # Count null activity values handled by DE3
-    # -----------------------------------------------------
-
     activity_columns = {
         "sms_in",
         "sms_out",
@@ -547,7 +754,6 @@ def quality_check_task(**context):
     }
 
     if RAW_DIR_WSL.exists():
-
         for csv_file in RAW_DIR_WSL.glob(
             "sms-call-internet-mi-*.csv"
         ):
@@ -562,92 +768,97 @@ def quality_check_task(**context):
                 reader = csv.DictReader(f)
 
                 for row in reader:
-
                     for column in activity_columns:
-
-                        value = row.get(
-                            column
-                        )
+                        value = row.get(column)
 
                         if (
                             value is None
                             or str(value).strip() == ""
                         ):
-
                             nulls_handled += 1
 
-    # -----------------------------------------------------
-    # Read warehouse rows
-    # -----------------------------------------------------
-
     if WAREHOUSE_DB_WSL.exists():
-
         connection = sqlite3.connect(
             str(WAREHOUSE_DB_WSL)
         )
 
         try:
-
             cursor = connection.cursor()
 
-            cursor.execute(
-                "SELECT COUNT(*) "
-                "FROM fact_network_activity"
+            rows_published = int(
+                cursor.execute(
+                    """
+                    SELECT COUNT(*)
+                    FROM fact_network_activity
+                    """
+                ).fetchone()[0]
             )
 
-            result = cursor.fetchone()
+            feature_rows = int(
+                cursor.execute(
+                    """
+                    SELECT COUNT(*)
+                    FROM network_feature_table
+                    """
+                ).fetchone()[0]
+            )
 
-            if result:
+            anomaly_rows = int(
+                cursor.execute(
+                    """
+                    SELECT COUNT(*)
+                    FROM network_anomaly_scores
+                    """
+                ).fetchone()[0]
+            )
 
-                rows_published = int(
-                    result[0]
-                )
+            risk_rows = int(
+                cursor.execute(
+                    """
+                    SELECT COUNT(*)
+                    FROM network_risk_scores
+                    """
+                ).fetchone()[0]
+            )
 
         finally:
-
             connection.close()
 
-    # -----------------------------------------------------
-    # AS_OF validation
-    # -----------------------------------------------------
-
     if not as_of:
-
         raise RuntimeError(
             "Quality check failed: "
             "AS_OF is missing."
         )
 
-    # -----------------------------------------------------
-    # Final task status
-    # -----------------------------------------------------
+    if feature_rows <= 0:
+        raise RuntimeError(
+            "Quality check failed: "
+            "ML2 feature table is empty."
+        )
+
+    if anomaly_rows <= 0:
+        raise RuntimeError(
+            "Quality check failed: "
+            "ML4 anomaly table is empty."
+        )
+
+    if risk_rows <= 0:
+        raise RuntimeError(
+            "Quality check failed: "
+            "ML6 risk table is empty."
+        )
 
     if upstream_failed:
-
-        task_states["quality_check"] = (
-            "failure"
-        )
-
+        task_states["quality_check"] = "failure"
         pipeline_result = "failure"
-
     else:
-
-        task_states["quality_check"] = (
-            "success"
-        )
-
+        task_states["quality_check"] = "success"
         pipeline_result = "success"
 
     task_states["notify"] = "pending"
 
-    # -----------------------------------------------------
-    # Machine-readable status
-    # -----------------------------------------------------
-
     status = {
-
         "run_id": dag_run.run_id,
-
         "run_timestamp": (
             datetime.now()
             .astimezone()
@@ -655,31 +866,18 @@ def quality_check_task(**context):
                 timespec="seconds"
             )
         ),
-
         "tasks": task_states,
-
         "metrics": {
-
             "rows_in": rows_in,
-
-            "rows_rejected": (
-                rows_rejected
-            ),
-
-            "nulls_handled": (
-                nulls_handled
-            ),
-
-            "rows_published": (
-                rows_published
-            ),
+            "rows_rejected": rows_rejected,
+            "nulls_handled": nulls_handled,
+            "rows_published": rows_published,
+            "feature_rows": feature_rows,
+            "anomaly_rows": anomaly_rows,
+            "risk_rows": risk_rows,
         },
-
         "AS_OF": as_of,
-
-        "pipeline_result": (
-            pipeline_result
-        ),
+        "pipeline_result": pipeline_result,
     }
 
     with open(
@@ -702,7 +900,6 @@ def quality_check_task(**context):
     )
 
     if upstream_failed:
-
         raise RuntimeError(
             "Quality check failed because "
             "an upstream task failed."
@@ -714,11 +911,10 @@ def quality_check_task(**context):
 
 
 # =========================================================
-# TASK 6 — NOTIFY
+# TASK 9 — NOTIFY
 # =========================================================
 
 def notify_task(**context):
-
     print("=" * 70)
     print("DE7 TASK: NOTIFY")
     print("=" * 70)
@@ -730,13 +926,15 @@ def notify_task(**context):
         "validate",
         "spark_process",
         "load_warehouse",
+        "ml2_build_features",
+        "ml4_anomaly_scoring",
+        "ml6_batch_scoring",
         "quality_check",
     ]
 
     states = {}
 
     for task_id in critical_tasks:
-
         ti = TaskInstance.get_task_instance(
             dag_id=dag_run.dag_id,
             task_id=task_id,
@@ -756,31 +954,22 @@ def notify_task(**context):
     )
 
     if pipeline_success:
-
         result = "SUCCESS"
         pipeline_result = "success"
-
     else:
-
         result = "FAILURE"
         pipeline_result = "failure"
 
     print("=" * 70)
 
     for task_id, state in states.items():
-
         print(
             f"{task_id}: {state}"
         )
 
     print("=" * 70)
 
-    # -----------------------------------------------------
-    # Update status file
-    # -----------------------------------------------------
-
     if STATUS_FILE_WSL.exists():
-
         with open(
             STATUS_FILE_WSL,
             "r",
@@ -790,13 +979,8 @@ def notify_task(**context):
             status = json.load(f)
 
     else:
-
         status = {
-
-            "run_id": (
-                dag_run.run_id
-            ),
-
+            "run_id": dag_run.run_id,
             "run_timestamp": (
                 datetime.now()
                 .astimezone()
@@ -804,11 +988,8 @@ def notify_task(**context):
                     timespec="seconds"
                 )
             ),
-
             "tasks": {},
-
             "metrics": {},
-
             "AS_OF": None,
         }
 
@@ -831,6 +1012,8 @@ def notify_task(**context):
         pipeline_result
     )
 
+    status["notification_result"] = result
+
     with open(
         STATUS_FILE_WSL,
         "w",
@@ -844,14 +1027,12 @@ def notify_task(**context):
         )
 
     if pipeline_success:
-
         print(
             "DE7 NOTIFICATION: "
             "Pipeline completed successfully."
         )
 
     else:
-
         print(
             "DE7 NOTIFICATION: "
             "Pipeline failed."
@@ -883,6 +1064,9 @@ with DAG(
         "DE7",
         "end-to-end",
         "telecom",
+        "ML2",
+        "ML4",
+        "ML6",
     ],
 ) as dag:
 
@@ -899,8 +1083,12 @@ with DAG(
     spark_process = PythonOperator(
         task_id="spark_process",
         python_callable=spark_process_task,
+
         retries=1,
-        retry_delay=timedelta(seconds=10),
+
+        retry_delay=timedelta(
+            seconds=10
+        ),
     )
 
     load_warehouse = PythonOperator(
@@ -908,17 +1096,43 @@ with DAG(
         python_callable=load_warehouse_task,
     )
 
+    ml2_build_features = PythonOperator(
+        task_id="ml2_build_features",
+        python_callable=ml2_build_features_task,
+    )
+
+    ml4_anomaly_scoring = PythonOperator(
+        task_id="ml4_anomaly_scoring",
+        python_callable=ml4_anomaly_scoring_task,
+    )
+
+    ml6_batch_scoring = PythonOperator(
+        task_id="ml6_batch_scoring",
+        python_callable=ml6_batch_scoring_task,
+    )
+
     quality_check = PythonOperator(
         task_id="quality_check",
         python_callable=quality_check_task,
+
         trigger_rule=TriggerRule.ALL_DONE,
     )
 
     notify = PythonOperator(
         task_id="notify",
         python_callable=notify_task,
+
         trigger_rule=TriggerRule.ALL_DONE,
     )
 
-    ingest >> validate >> spark_process >> load_warehouse >> quality_check >> notify
-
+    (
+        ingest
+        >> validate
+        >> spark_process
+        >> load_warehouse
+        >> ml2_build_features
+        >> ml4_anomaly_scoring
+        >> ml6_batch_scoring
+        >> quality_check
+        >> notify
+    )

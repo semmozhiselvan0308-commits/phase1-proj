@@ -1,0 +1,26 @@
+{
+  "status": "SUCCESS",
+  "model_version": "ml3-standardscaler-class-balanced-logisticregression-41e8a5d43737",
+  "input_rows": 1170000,
+  "scored_rows": 1170000,
+  "distinct_grids": 10000,
+  "distinct_feature_timestamps": 117,
+  "risk_level_counts": {
+    "LOW": 706319,
+    "MEDIUM": 461225,
+    "HIGH": 2456
+  },
+  "risk_score_range": {
+    "minimum": 0.157042,
+    "maximum": 0.969114
+  },
+  "feature_timestamp_min": "2013-11-02 23:00:00",
+  "feature_timestamp_max": "2013-11-07 19:00:00",
+  "warehouse_table": "network_risk_scores",
+  "primary_key": [
+    "grid_id",
+    "feature_timestamp"
+  ],
+  "rerun_safe": true,
+  "persisted_rows": 1170000
+}

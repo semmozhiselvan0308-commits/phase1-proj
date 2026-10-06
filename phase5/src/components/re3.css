@@ -1,0 +1,268 @@
+/* =========================================================
+   RE3 — HOTSPOTS & ALERTS
+   Leaflet Milan Grid Map
+   ========================================================= */
+
+
+/* =========================================================
+   PAGE
+   ========================================================= */
+
+.re3-page .signal-controls {
+  padding: 14px 0;
+}
+
+.re3-page .signal-layout {
+  margin-top: 13px;
+}
+
+.re3-page .data-panel {
+  min-width: 0;
+}
+
+
+/* =========================================================
+   MAP PANEL
+   ========================================================= */
+
+.re3-page .map-panel {
+  padding: 24px 25px 19px;
+}
+
+
+/* =========================================================
+   MAP STAGE
+   ========================================================= */
+
+.re3-page .map-stage {
+  position: relative;
+  width: 100%;
+  height: 480px;
+  min-height: 320px;
+
+  margin-top: 20px;
+
+  overflow: hidden;
+
+  border: 1px solid #dce6df;
+  border-radius: 8px;
+
+  background: #eef5ef;
+
+  cursor: grab;
+}
+
+.re3-page .map-stage:active {
+  cursor: grabbing;
+}
+
+
+/* =========================================================
+   LEAFLET CONTAINER
+   ========================================================= */
+
+.re3-page .map-stage .leaflet-container {
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+
+  border-radius: 8px;
+
+  background: #eef5ef;
+
+  font-family: inherit;
+}
+
+
+/* =========================================================
+   LEAFLET ZOOM CONTROL
+   ========================================================= */
+
+.re3-page .map-stage .leaflet-control-zoom {
+  margin-top: 10px;
+  margin-left: 10px;
+
+  border: 1px solid #c6d8cd;
+
+  box-shadow: none;
+}
+
+.re3-page .map-stage .leaflet-control-zoom a {
+  width: 32px;
+  height: 32px;
+
+  line-height: 30px;
+
+  color: #31574a;
+  background: #ffffff;
+
+  border-color: #c6d8cd;
+}
+
+.re3-page .map-stage .leaflet-control-zoom a:hover {
+  color: #1f4639;
+  background: #f3f8f5;
+}
+
+
+/* =========================================================
+   IMPORTANT:
+   DO NOT SET fill / stroke HERE.
+
+   React Leaflet supplies those values dynamically
+   according to HIGH / ATTENTION.
+
+   Setting them here would override the React styles.
+   ========================================================= */
+
+.re3-page .map-stage .leaflet-interactive {
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   HIGH CELLS
+   Additional CSS class support
+   ========================================================= */
+
+.re3-page .map-stage .high {
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   ATTENTION CELLS
+   ========================================================= */
+
+.re3-page .map-stage .attention {
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   MAP TOOLTIP
+   ========================================================= */
+
+.re3-page .map-stage .leaflet-tooltip {
+  padding: 6px 9px;
+
+  border: 1px solid #c6d8cd;
+  border-radius: 5px;
+
+  color: #31574a;
+  background: #ffffff;
+
+  box-shadow:
+    0 2px 8px rgba(49, 87, 74, 0.15);
+
+  font: 10px "DM Mono", monospace;
+}
+
+.re3-page .map-stage .leaflet-tooltip::before {
+  border-top-color: #ffffff;
+}
+
+
+/* =========================================================
+   MAP LOADING
+   ========================================================= */
+
+.re3-page .map-loading {
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  color: #71827a;
+
+  font: 11px "DM Mono", monospace;
+
+  background: #eef5ef;
+}
+
+
+/* =========================================================
+   LEGEND
+   ========================================================= */
+
+.re3-page .map-legend {
+  display: flex;
+
+  gap: 14px;
+
+  margin-top: 12px;
+
+  color: #71827a;
+
+  font: 9px "DM Mono", monospace;
+}
+
+.re3-page .map-legend span {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 5px;
+}
+
+.re3-page .map-legend i {
+  width: 10px;
+  height: 10px;
+
+  border-radius: 2px;
+
+  display: inline-block;
+}
+
+
+/* NORMAL */
+
+.re3-page .map-legend i.normal {
+  background: #dce9df;
+}
+
+
+/* ATTENTION */
+
+.re3-page .map-legend i.attention {
+  background: #f2d35f;
+}
+
+
+/* HIGH */
+
+.re3-page .map-legend i.high {
+  background: #e85f42;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+  .re3-page .map-stage {
+    height: 420px;
+  }
+
+}
+
+
+@media (max-width: 600px) {
+
+  .re3-page .map-stage {
+    height: 360px;
+  }
+
+  .re3-page .map-legend {
+    flex-wrap: wrap;
+
+    gap: 10px;
+  }
+
+}

@@ -1,0 +1,28 @@
+ML1 IMPLEMENTATION LOG
+=======================
+
+Completed:
+- Selected high-activity investigation risk as the primary ML problem.
+- Defined the prediction unit as one grid plus one hourly interval.
+- Defined features from the trailing 24 hours ending at t.
+- Defined the label on the future interval t+1.
+- Selected a grid-specific 90th-percentile total_activity threshold.
+- Restricted the percentile threshold to the chronological training period.
+- Documented the feature fields and their operational meaning.
+- Documented target, window, threshold, and chronological split leakage risks.
+- Defined the positive-result action as human investigation.
+- Added non-goals forbidding claims about congestion, capacity, throughput,
+  latency, packet loss, faults, outages, or certainty.
+- Compared high-activity risk, anomalous activity, and activity drop before
+  selecting the primary problem.
+- Added a one-sentence explanation of what the model can know beyond a current
+  threshold.
+
+Primary deliverable:
+- ML1_problem_statement.md
+
+Status:
+- ML1 design complete.
+- ML2 feature engineering has not been implemented yet.
+- ML3 validation has not been implemented yet.
+- Future ML stages must preserve the t/t+1 boundary and non-goals.
